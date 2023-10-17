@@ -108,7 +108,13 @@ if (typeof theGlobal.fqWO.onMessageAdded == "undefined") {
             var theWins = [...Services.wm.getEnumerator("")];
             for (i in theWins) {
                 if (theWins[i].document.URL == "chrome://messenger/content/messenger.xhtml") {
-                    theOpenWins.push(theWins[i].GetSelectedMsgFolders()[0].URI);
+                      if (typeof theWins[i].GetSelectedMsgFolders == "function") {
+                    theOpenWins.push(theWins[i].GetSelectedMsgFolders()[0].URI);}
+                    else {
+                     debugwarn("ERROR - theWins[i].GetSelectedMsgFolders is not a function!");
+                           debugwarn("i is", i);
+                        debugwarn("theWins[i] is", theWins[i]);
+                }
                 }
             };
             var theFound = theOpenWins.some(windowx => windowx == parentItem.URI);
@@ -203,7 +209,7 @@ if (typeof theGlobal.fqWO.listenersUpdated == "undefined" || theGlobal.fqWO.list
     theGlobal.fqWO.listenersUpdated = "1";
 }
 
-    /* NOTES & TIPS: 
+        /* NOTES & TIPS: 
      *
      * Manually trigger folderlisteners to be refreshed next time the script runs by setting 
      * Services.appShell.hiddenDOMWindow.fqWO.listenersUpdated = "" in console.
