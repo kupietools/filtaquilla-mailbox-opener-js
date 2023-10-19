@@ -1,6 +1,4 @@
-# DEEP APOLOGIES. THERE IS CLEARLY A BUG IN THIS SCRIPT. I AM WORKING ON IT RIGHT NOW AND WILL REMOVE THIS NOTICE ONCE IT'S FIXED. MK 10/18/23 10:48 AM PST.
-
-## filtaquilla-mailbox-opener-js: a FiltaQuilla "open mail folder on receiving mail" Javascript Action script
+# filtaquilla-mailbox-opener-js: a FiltaQuilla "open mail folder on receiving mail" Javascript Action script
 
 Among the many things the late, lamented Eudora email client spoiled me for was, when I checked my mail, opening all the mailboxes that had received mail in new windows. That way I could click through, looking at each mail window and closing it when I was done, and be sure I had seen all my new mail. 
 
