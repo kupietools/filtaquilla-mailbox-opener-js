@@ -39,29 +39,14 @@
 
 //USER SETTINGS:
 
-const folderNamesToSkip = [/Trash$/,/Spam$/,/Drafts$/]; //regexs of folder names not to open if they receive new messages
-const debuggingDefault = false; //default to debugging messages on or off when script runs for the first time in a session
+var foldersToSkip = [/Trash$/,/Spam$/,/Drafts$/]; //regexs of folder names not to open if they receive new messages
+var debuggingMessagesDefault = false; //default to debugging messages on or off when script runs for the first time in a session
 
 //END USER SETTINGS
 
 
 
 var theGlobal = Services.appShell.hiddenDOMWindow;
-
-if (typeof msgHdrs == "undefined") {
-    var msgHdrs = [];
-} //so can be run from console
-
-
-//Assign x-first-folder-URI header if none:
-for (let index = 0; index < msgHdrs.length; index++) {
-    let hdrs = msgHdrs.queryElementAt ? msgHdrs.queryElementAt(index, Ci.nsIMsgDBHdr) : msgHdrs[index]; //Ci = Components.interfaces
-
-    if (hdrs.getStringProperty("x-first-folder-URI") == "") {
-        hdrs.setStringProperty("x-first-folder-URI", hdrs.folder.URI);
-    }
-
-}
 
 /* Make sure functions exist in global context */
 
@@ -70,72 +55,97 @@ if (typeof theGlobal.fqWO == "undefined") {
     theGlobal.fqWO = {};
 }
 
+//store foldersToSkip
+theGlobal.fqWO.foldersToSkip = foldersToSkip;
+
 //create debug logging setting if it doesn't exist
-if (typeof theGlobal.fqWO.debug == "undefined") {
-    theGlobal.fqWO.debug = debuggingDefault;
+if (typeof theGlobal.fqWO.fqDebug == "undefined") {
+    theGlobal.fqWO.fqDebug = debuggingMessagesDefault;
 }
 
 //create debugwarn logging function if it doesn't exist
 if (typeof theGlobal.fqWO.debugwarn == "undefined") {
     theGlobal.fqWO.debugwarn = (function(...theLog) {
         if (Services.appShell.hiddenDOMWindow.fqWO.fqDebug) {
-            console.warn(theLog);
+        for (let index = 0; index < theLog.length; index++) {
+            console.warn(theLog[index]);
+            }
         }
     });
 }
 
+//initial debugging output
+var debugwarn = theGlobal.fqWO.debugwarn;
+debugwarn ("A1. theGlobal.fqWO preliminaries done. theGlobal.fqWO is", theGlobal.fqWO);
+
+
 //create mailfolder listener's message removal action if it doesn't exist
 if (typeof theGlobal.fqWO.onMessageRemoved == "undefined") {
     theGlobal.fqWO.onMessageRemoved = (function(parentItem, item) {
+    //right now onMessageRemoved does nothing, just logs for troubleshooting purpose.
         var debugwarn = Services.appShell.hiddenDOMWindow.fqWO.debugwarn;
-        debugwarn("START ------------------------------------------");
-        debugwarn("ItemRemoved- parentItem", parentItem.URI, parentItem, "Item", item.author, item.subject, item);
+        debugwarn("B1. START theGlobal.fqWO.onMessageRemoved ------------------------------------------");
+        debugwarn("B2. ItemRemoved- parentItem", parentItem.URI, parentItem, "Item", item.author, item.subject, item);
     });
 }
 
 //create mailfolder listener's message addition action if it doesn't exist
 if (typeof theGlobal.fqWO.onMessageAdded == "undefined") {
+debugwarn("A2. theGlobal.fqWO.onMessageAdded == undefined");
     theGlobal.fqWO.onMessageAdded = (function(parentItem, item) {
         var theGlobal = Services.appShell.hiddenDOMWindow;
         var debugwarn = Services.appShell.hiddenDOMWindow.fqWO.debugwarn;
-        debugwarn("ItemAdded BEGIN - parentItem", parentItem.URI, parentItem, "Item", item.author, item.subject, item);
+        debugwarn ("C1. inside onMessageAdded. theGlobal.fqWO is", theGlobal.fqWO);
+         debugwarn("C2. START theGlobal.fqWO.onMessageAdded ------------------------------------------");
+        debugwarn("C3. ItemAdded BEGIN - parentItem", parentItem.URI, parentItem, "Item", item.author, item.subject, item);
         draftPropertyIndex = [...item.properties].indexOf("x-mozilla-draft-info");
         //note: properties was propertyEnumerator prior to TB 115
-        debugwarn("OPENER - draft property index", draftPropertyIndex);
+        debugwarn("C4. OPENER - draft property index", draftPropertyIndex);
         if (draftPropertyIndex == -1) {
-            debugwarn("OPENER - starting non-draft (-1) conditional code block");
+            debugwarn("C5. OPENER - starting non-draft (-1) conditional code block");
             var theOpenWins = [];
             var theWins = [...Services.wm.getEnumerator("")];
+            debugwarn("C6. theWins is", theWins);
             for (i in theWins) {
+            debugwarn("looping through theWins, i=", i);
+              debugwarn("theWins[i]=", theWins[i]);
                 if (theWins[i].document.URL == "chrome://messenger/content/messenger.xhtml") {
                       if (typeof theWins[i].GetSelectedMsgFolders == "function") {
+                      debugwarn("theWins[i].GetSelectedMsgFolders == function succeeded");
                     theOpenWins.push(theWins[i].GetSelectedMsgFolders()[0].URI);}
                     else {
                      debugwarn("ERROR - theWins[i].GetSelectedMsgFolders is not a function!");
-                           debugwarn("i is", i);
-                        debugwarn("theWins[i] is", theWins[i]);
+                           debugwarn("done i is", i);
+                        debugwarn("done theWins[i] is", theWins[i]);
                 }
                 }
             };
             var theFound = theOpenWins.some(windowx => windowx == parentItem.URI);
-            debugwarn("theOpenWins", theOpenWins);
-            debugwarn("theWins", theWins);
-            debugwarn("theFound", theFound);
+            debugwarn("C7. theOpenWins=", theOpenWins);
             
-            const shouldBeSkipped = folderNamesToSkip.some(rx => rx.test(parentItem.URI));
+            debugwarn("C8. theFound=", theFound);
+            debugwarn("C9. about to check should be skipped - parentItem.URI", parentItem.URI);
+            
+            var shouldBeSkipped = theGlobal.fqWO.foldersToSkip.some(rx => rx.test(parentItem.URI));
+            
+            debugwarn("C10. shouldBeSkipped is ",shouldBeSkipped);
 
             if (theFound != true && !shouldBeSkipped ) {
+            debugwarn ("C11. theFound != true && !shouldBeSkipped");
                 //   if (typeof theGlobal.fqWO.frontmostWindow == "undefined") {
                 //                    theGlobal.fqWO.frontmostWindow = {};
                 // }
                 //don't know why needed to initialize it...
+                debugwarn("C12. Services.ww.activeWindow=",Services.ww.activeWindow)
                 theGlobal.fqWO.frontmostWindow = Services.ww.activeWindow;
-
-                debugwarn("OPENER - Primary app window is: title", theGlobal.fqWO.frontmostWindow.location.title, "window object", theGlobal.fqWO.frontmostWindow, "message string properties are", [...item.properties]);
+debugwarn("C13. theGlobal.fqWO.frontmostWindow=",theGlobal.fqWO.frontmostWindow);
+if (theGlobal.fqWO.frontmostWindow != null) {
+                debugwarn("C14. OPENER - Primary app window is: title", theGlobal.fqWO.frontmostWindow.location.title ); } else { debugwarn("C15. OPENER - Primary app window is: title logging failed; window is null");}
+                debugwarn ("C16. message string passed to handler's properties are", [...item.properties]);
                
-                debugwarn("OPENER - parentItem (parent folder passed to event handler)", parentItem);
+                debugwarn("C17. OPENER - parentItem (parent folder passed to event handler) is ", parentItem);
                 
-/* IS THIS REALLY NEEDED? disabling. Watch out for problems and reenable if spot any.
+/* IS THIS REALLY NEEDED? I think this was a previous attempt to deal with duplicate windows by closing an existing match. Disabling. Watch out for problems and reenable if spot any.
                 try {
                     Services.wm.getMostRecentWindow("").open("", parentItem.URI, "chrome=yes,toolbar=yes,status=yes").close();
                     debugwarn("OPENER - closed ok");
@@ -144,31 +154,45 @@ if (typeof theGlobal.fqWO.onMessageAdded == "undefined") {
                 }
                 debugwarn("OPENER - opening target window");
                 */
-                var newwin = Services.wm.getMostRecentWindow("").openDialog("chrome://messenger/content/messenger.xhtml", parentItem.URI, "chrome=yes,toolbar=yes,status=yes", parentItem.URI);
-                newwin.addEventListener('pageshow', function(e) {
-                    theGlobal.fqWO.frontmostWindow.focus();
+                var newwin = theGlobal.openDialog("chrome://messenger/content/messenger.xhtml", parentItem.URI, "chrome=yes,toolbar=yes,status=yes", parentItem.URI);
+                newwin.addEventListener('pageshow', function(e)
+                 {
+              var theGlobal = Services.appShell.hiddenDOMWindow;
+                  var debugwarn = Services.appShell.hiddenDOMWindow.fqWO.debugwarn;
+       debugwarn ("F1. inside addEventListener(pageshow). theGlobal.fqWO is", theGlobal.fqWO);
+      
+                    debugwarn("F2. newwin event listener function running");
+                    
+                    if (theGlobal.fqWO.frontmostWindow != null) {
+                    theGlobal.fqWO.frontmostWindow.focus();  debugwarn("F3. focused on theGlobal.fqWO.frontmostWindow");} else {debugwarn("F4. couldn't focus, frontmost window is null.");}
                     //return focus to the page the was last in front when new window loads
+                  
                 });
-                debugwarn("OPENER - opened window - newwin title", newwin.location.title, "newwin object", newwin, "parentItem.URI", parentItem.URI);
+                debugwarn("C18. OPENER - opened window - newwin title", newwin.location.title, "newwin object", newwin, "parentItem.URI", parentItem.URI);
                 //newwin.goDoCommand("cmd_toggleMessagePane")
                 try {
                     newwin.gMessagePaneWrapper.collapsed = true;
-                } catch (e) {
-                    debugwarn("OPENER - collapsing message pane failed", e);
+                    debugwarn("C19. OPENER - collapsing message pane failed", e);
+                } catch (e) 
+                {
+                    debugwarn("C20. OPENER - collapsing message pane failed", e);
                 }
                 try {
                     theGlobal.fqWO.frontmostWindow.focus();
-                    debugwarn("OPENER - focused", theGlobal.fqWO.frontmostWindow.document.title, "focused window is now", Services.ww.activeWindow.document.title);
-                } catch (e) {
-                    debugwarn("OPENER - focus failed", e);
+                    debugwarn("C21. OPENER - focused", theGlobal.fqWO.frontmostWindow.document.title, "focused window is now", Services.ww.activeWindow.document.title);
+                } catch (e) 
+                {
+                    debugwarn("C22. OPENER - focus failed", e);
                 }
-                debugwarn("OPENER - END parentItem", parentItem.URI, parentItem, "item", item.author, item.subject, item);
-                debugwarn("END ------------------------------------------");
-            } else {
-                debugwarn("window already open");
+                debugwarn("C23. OPENER - END parentItem", parentItem.URI, parentItem, "item", item.author, item.subject, item);
+                debugwarn("C24. END ------------------------------------------");
+            } else 
+            {
+                debugwarn("C25. window already open");
             }
-        } else {
-            debugwarn("OPENER - skipped folder listener, DRAFT parentItem", parentItem.URI, parentItem, "item", item.author, item.subject, item);
+        } else
+         {
+            debugwarn("C26. OPENER - skipped folder listener, DRAFT parentItem", parentItem.URI, parentItem, "item", item.author, item.subject, item);
         }
 
 
@@ -179,10 +203,14 @@ if (typeof theGlobal.fqWO.onMessageAdded == "undefined") {
 if (typeof theGlobal.fqWO.folderListener == "undefined") {
     theGlobal.fqWO.folderListener = {
         onMessageRemoved: function(parentItem, item) {
+            Services.appShell.hiddenDOMWindow.fqWO.debugwarn("E1. about to call onMessageRemoved with ",parentItem,item);
             Services.appShell.hiddenDOMWindow.fqWO.onMessageRemoved(parentItem, item);
+               Services.appShell.hiddenDOMWindow.fqWO.debugwarn("E2. Done calling onMessageRemoved with ",parentItem,item);
         },
         onMessageAdded: function(parentItem, item) {
+           Services.appShell.hiddenDOMWindow.fqWO.debugwarn("E3. about to call onMessageAdded with ",parentItem,item);
             Services.appShell.hiddenDOMWindow.fqWO.onMessageAdded(parentItem, item);
+               Services.appShell.hiddenDOMWindow.fqWO.debugwarn("E4. done calling onMessageAdded with ",parentItem,item);
         }
     };
 }
@@ -193,6 +221,8 @@ if (typeof theGlobal.fqWO.theUpdateFunction == "undefined") {
     theGlobal.fqWO.theUpdateFunction = (function() {
 
         var theGlobal = Services.appShell.hiddenDOMWindow;
+        var debugwarn = theGlobal.fqWO.debugwarn;
+        debugwarn ("D1. inside theUpdateFunction. theGlobal.fqWO is", theGlobal.fqWO);
         var folderListener = theGlobal.fqWO.folderListener;
         var notifyFlags = Components.interfaces.nsIFolderListener.added | Components.interfaces.nsIFolderListener.removed;
         MailServices.mailSession.RemoveFolderListener(folderListener);
@@ -204,11 +234,50 @@ if (typeof theGlobal.fqWO.theUpdateFunction == "undefined") {
 }
 
 //if no flag indicating listeners have been updated, perform theUpdateFunction() and create flag indicating listeners have been updated
-if (typeof theGlobal.fqWO.listenersUpdated == "undefined" || theGlobal.fqWO.listenersUpdated != "1") {
-    theGlobal.fqWO.theUpdateFunction();
-    theGlobal.fqWO.listenersUpdated = "1";
+
+
+
+//Make sure msgHdrs is defined; since 115 for some reason it's not always
+if (typeof msgHdrs == "undefined") {
+    var msgHdrs = [''];
+    debugwarn ("A3. msgHdrs manually set");
+    debugwarn ("A4. msgHdrs is", msgHdrs);
+    
+} //so can be run from console
+
+
+//Assign x-first-folder-URI header if none:
+    debugwarn ("A5. about to loop through msgHdrs");
+
+for (let index = 0; index < msgHdrs.length; index++) {
+    debugwarn ("A6. index is ", index );
+    debugwarn ("A7. msgHdrs.queryElementAt ", msgHdrs.queryElementAt ? "exists":"doesn't exist");
+    let hdrs = msgHdrs.queryElementAt ? msgHdrs.queryElementAt(index, Ci.nsIMsgDBHdr) : msgHdrs[index]; //Ci = Components.interfaces
+    debugwarn ("A8. hdrs is");
+    debugwarn (hdrs);
+    if (typeof hdrs.getStringProperty != "function") {
+    debugwarn("A9. typeof hdrs.getStringProperty() != function");} 
+    else {
+    if (hdrs.getStringProperty("x-first-folder-URI") == "") {
+        debugwarn ("A11. about to set x-first-folder-URI to ");
+        debugwarn (hdrs.folder.URI);
+        hdrs.setStringProperty("A12. x-first-folder-URI", hdrs.folder.URI);
+        debugwarn ("A13. hdrs.getStringProperty(x-first-folder-URI) is now");
+        debugwarn (hdrs.getStringProperty("x-first-folder-URI"));
+    }
+    }
+
 }
 
+if (typeof theGlobal.fqWO.listenersUpdated == "undefined" || theGlobal.fqWO.listenersUpdated != "1") {
+debugwarn("A14. about to call theUpdateFunction()");
+    theGlobal.fqWO.theUpdateFunction();
+       debugwarn("A15. done calling theUpdateFunction(). theGlobal.fqWO is");
+       debugwarn (theGlobal.fqWO);
+    theGlobal.fqWO.listenersUpdated = "1";
+ 
+
+}
         /* NOTES & TIPS: 
      *
      * Manually trigger folderlisteners to be refreshed next time the script runs by setting 
