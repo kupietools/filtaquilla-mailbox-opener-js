@@ -23,5 +23,5 @@ All rights reserved, see attached license file for specifics.
 Be excellent to each other. 
 
 Michael Kupietz  
-FileMaker Pro Consulting, plus Web Development & IT Support: https://kupietz.com  
+FileMaker Pro Consulting · Web Development · IT Support: https://kupietz.com  
 Creative Work: https://michaelkupietz.com  
