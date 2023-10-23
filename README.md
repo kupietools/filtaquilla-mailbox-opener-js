@@ -22,6 +22,4 @@ All rights reserved, see attached license file for specifics.
 
 Be excellent to each other. 
 
-Michael Kupietz
-FileMaker Pro Consulting + More: https://kupietz.com
-Art & Hobbies: https://michaelkupietz.com
+Michael Kupietz . FileMaker Pro Consulting + More: https://kupietz.com . Creative Work: https://michaelkupietz.com
