@@ -107,16 +107,20 @@ debugwarn("A2. theGlobal.fqWO.onMessageAdded == undefined");
             var theWins = [...Services.wm.getEnumerator("")];
             debugwarn("C6. theWins is", theWins);
             for (i in theWins) {
-            debugwarn("looping through theWins, i=", i);
-              debugwarn("theWins[i]=", theWins[i]);
+            debugwarn("G1. looping through theWins, i=", i);
+              debugwarn("G2. theWins[i]=", theWins[i]);
                 if (theWins[i].document.URL == "chrome://messenger/content/messenger.xhtml") {
                       if (typeof theWins[i].GetSelectedMsgFolders == "function") {
-                      debugwarn("theWins[i].GetSelectedMsgFolders == function succeeded");
-                    theOpenWins.push(theWins[i].GetSelectedMsgFolders()[0].URI);}
+                      debugwarn("G3. theWins[i].GetSelectedMsgFolders == function succeeded, theWins[i].GetSelectedMsgFolders()="); var theGet=theWins[i].GetSelectedMsgFolders();debugwarn(theGet);
+                    if(theGet.length >0)
+                    {theOpenWins.push(theWins[i].GetSelectedMsgFolders()[0].URI);}
+                    else
+                    {debugwarn("G3b. theWins[i].GetSelectedMsgFolders() length was 0.");}
+                    }
                     else {
-                     debugwarn("ERROR - theWins[i].GetSelectedMsgFolders is not a function!");
-                           debugwarn("done i is", i);
-                        debugwarn("done theWins[i] is", theWins[i]);
+                     debugwarn("G4. ERROR - theWins[i].GetSelectedMsgFolders is not a function!");
+                           debugwarn("G5. done i is", i);
+                        debugwarn("G6. done theWins[i] is", theWins[i]);
                 }
                 }
             };
@@ -238,21 +242,24 @@ if (typeof theGlobal.fqWO.theUpdateFunction == "undefined") {
 
 
 //Make sure msgHdrs is defined; since 115 for some reason it's not always
+var fqWO_msgHdrs = ['']; //using unique variable name for console debugging purposes
 if (typeof msgHdrs == "undefined") {
-    var msgHdrs = [''];
-    debugwarn ("A3. msgHdrs manually set");
-    debugwarn ("A4. msgHdrs is", msgHdrs);
-    
-} //so can be run from console
+    debugwarn ("A3. fqWO_msgHdrs manually set");
+    debugwarn ("A4. fqWO_msgHdrs is", fqWO_msgHdrs);
+    //so can be run from console
+} else {
+    fqWO_msgHdrs = msgHdrs;
+}
 
 
 //Assign x-first-folder-URI header if none:
-    debugwarn ("A5. about to loop through msgHdrs");
+    debugwarn ("A5. about to loop through fqWO_msgHdrs, length is");
+   debugwarn (fqWO_msgHdrs.length);
 
-for (let index = 0; index < msgHdrs.length; index++) {
+for (let index = 0; index < fqWO_msgHdrs.length; index++) {
     debugwarn ("A6. index is ", index );
-    debugwarn ("A7. msgHdrs.queryElementAt ", msgHdrs.queryElementAt ? "exists":"doesn't exist");
-    let hdrs = msgHdrs.queryElementAt ? msgHdrs.queryElementAt(index, Ci.nsIMsgDBHdr) : msgHdrs[index]; //Ci = Components.interfaces
+    debugwarn ("A7. fqWO_msgHdrs.queryElementAt ", fqWO_msgHdrs.queryElementAt ? "exists":"doesn't exist");
+    let hdrs = fqWO_msgHdrs.queryElementAt ? fqWO_msgHdrs.queryElementAt(index, Ci.nsIMsgDBHdr) : fqWO_msgHdrs[index]; //Ci = Components.interfaces
     debugwarn ("A8. hdrs is");
     debugwarn (hdrs);
     if (typeof hdrs.getStringProperty != "function") {
@@ -261,7 +268,7 @@ for (let index = 0; index < msgHdrs.length; index++) {
     if (hdrs.getStringProperty("x-first-folder-URI") == "") {
         debugwarn ("A11. about to set x-first-folder-URI to ");
         debugwarn (hdrs.folder.URI);
-        hdrs.setStringProperty("A12. x-first-folder-URI", hdrs.folder.URI);
+        hdrs.setStringProperty("x-first-folder-URI", hdrs.folder.URI);
         debugwarn ("A13. hdrs.getStringProperty(x-first-folder-URI) is now");
         debugwarn (hdrs.getStringProperty("x-first-folder-URI"));
     }
