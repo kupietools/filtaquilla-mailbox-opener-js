@@ -22,6 +22,9 @@ All rights reserved, see attached license file for specifics.
 
 Be excellent to each other. 
 
-Michael Kupietz  
-FileMaker Pro Consulting · Web Development · IT Support: https://kupietz.com  
-Creative Work: https://michaelkupietz.com  
+# I AM
+Michael E. Kupietz, software engineering, consulting, & support for FileMaker Pro, Full-Stack Web, Desktop OS, & TradingView platforms  
+https://kupietz.com (Business info)  
+https://github.com/kupietools (Free software)  
+https://michaelkupietz.com (Personal & creative showcase)  
+
