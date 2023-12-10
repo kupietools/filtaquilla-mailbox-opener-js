@@ -22,7 +22,7 @@ All rights reserved, see attached license file for specifics.
 
 Be excellent to each other. 
 
-# I AM
+# I am
 Michael E. Kupietz, software engineering, consulting, & support for FileMaker Pro, Full-Stack Web, Desktop OS, & TradingView platforms  
 https://kupietz.com (Business info)  
 https://github.com/kupietools (Free software)  
